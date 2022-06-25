@@ -1,0 +1,70 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+# new directive
+directive @auth on FIELD_DEFINITION
+
+scalar Any
+
+type User {
+  _id: ID!
+  name: String!
+  username: String!
+  email: String! 
+  password: String!
+}
+
+type Employee {
+  _id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  address: String!
+  position: String!
+}
+
+type Token {
+  token: String!
+  expired_at: Int!
+}
+
+type AuthOps {
+  login(email: String!, password: String!): Any! @goField(forceResolver: true)
+  register(input: NewUser!): Any! @goField(forceResolver: true)
+}
+
+type Query {
+  user(email: String!): User!
+  userUsername(username: String!): User!
+  userDelete(email: String!): Boolean
+  users: [User!]!
+  employee(_id: String!): Employee!
+  employees: [Employee!]!
+  # Add Protected Resource
+  protected: String! @goField(forceResolver: true) @auth
+}
+
+input NewUser {
+  name: String!
+  username: String!
+  email: String!
+  password: String!
+}
+
+input NewEmployee {
+  firstName: String!
+  lastName: String!
+  email: String!
+  address: String!
+  position: String!
+}
+
+type Mutation {
+  createEmployee(input:NewEmployee!): Employee!
+  createUser(input: NewUser!): User!
+  auth: AuthOps! 
+  # login(email: String!, password: String!): Token!
+}
