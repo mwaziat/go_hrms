@@ -19,7 +19,7 @@ type DB struct {
 
 func Connect() *DB {
 
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://admin:wanasaba10@wanasaba.h4rbt.mongodb.net/?retryWrites=true&w=majority"))
 
 	if err != nil {
 		log.Fatal(err)
