@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/equimper/meetmeup/graph/model"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (db *DB) SaveEmployee(input model.NewEmployee) *model.Employee {
@@ -28,6 +30,51 @@ func (db *DB) SaveEmployee(input model.NewEmployee) *model.Employee {
 		Email:     input.Email,
 		Address:   input.Address,
 		Position:  input.Position,
+	}
+}
+
+func (db *DB) UpdateEmployee(id string, input model.UpdateEmployee) (*model.Employee, error) {
+	collection := db.client.Database("hrms").Collection("employee")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	ObjectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res := collection.FindOne(ctx, bson.M{"_id": ObjectId})
+	if res != nil {
+		filter := bson.M{"_id": ObjectId}
+		update := bson.M{
+			"firstName": input.FirstName,
+			"lastName":  input.LastName,
+			"email":     input.Email,
+			"address":   input.Address,
+			"position":  input.Position,
+		}
+		var updatedDocument bson.M
+		err := collection.FindOneAndUpdate(ctx, filter, bson.M{"$set": update}).Decode(&updatedDocument)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				return nil, &gqlerror.Error{
+					Message: "Email not found",
+				}
+			}
+			log.Fatal(err)
+		}
+
+		return &model.Employee{
+			FirstName: input.FirstName,
+			LastName:  input.LastName,
+			Email:     input.Email,
+			Address:   input.Address,
+			Position:  input.Position,
+		}, nil
+	}
+
+	return nil, &gqlerror.Error{
+		Message: "Email not found",
 	}
 }
 

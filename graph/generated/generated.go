@@ -64,6 +64,7 @@ type ComplexityRoot struct {
 		Auth           func(childComplexity int) int
 		CreateEmployee func(childComplexity int, input model.NewEmployee) int
 		CreateUser     func(childComplexity int, input model.NewUser) int
+		UpdateEmployee func(childComplexity int, id string, input model.UpdateEmployee) int
 	}
 
 	Query struct {
@@ -98,6 +99,7 @@ type MutationResolver interface {
 	CreateEmployee(ctx context.Context, input model.NewEmployee) (*model.Employee, error)
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
 	Auth(ctx context.Context) (*model.AuthOps, error)
+	UpdateEmployee(ctx context.Context, id string, input model.UpdateEmployee) (*model.Employee, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, email string) (*model.User, error)
@@ -220,6 +222,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(model.NewUser)), true
+
+	case "Mutation.updateEmployee":
+		if e.complexity.Mutation.UpdateEmployee == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateEmployee_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateEmployee(childComplexity, args["_id"].(string), args["input"].(model.UpdateEmployee)), true
 
 	case "Query.employee":
 		if e.complexity.Query.Employee == nil {
@@ -349,6 +363,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputNewEmployee,
 		ec.unmarshalInputNewUser,
+		ec.unmarshalInputUpdateEmployee,
 	)
 	first := true
 
@@ -473,11 +488,20 @@ input NewEmployee {
   position: String!
 }
 
+input UpdateEmployee {
+  firstName: String!
+  lastName: String!
+  email: String!
+  address: String!
+  position: String!
+}
+
 type Mutation {
   createEmployee(input:NewEmployee!): Employee!
   createUser(input: NewUser!): User!
   auth: AuthOps! 
   # login(email: String!, password: String!): Token!
+  updateEmployee(_id: ID!, input: UpdateEmployee!): Employee!
 }
 `, BuiltIn: false},
 }
@@ -553,6 +577,30 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateEmployee_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("_id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["_id"] = arg0
+	var arg1 model.UpdateEmployee
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNUpdateEmployee2githubᚗcomᚋequimperᚋmeetmeupᚋgraphᚋmodelᚐUpdateEmployee(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -1225,6 +1273,75 @@ func (ec *executionContext) fieldContext_Mutation_auth(ctx context.Context, fiel
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AuthOps", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateEmployee(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateEmployee(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateEmployee(rctx, fc.Args["_id"].(string), fc.Args["input"].(model.UpdateEmployee))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Employee)
+	fc.Result = res
+	return ec.marshalNEmployee2ᚖgithubᚗcomᚋequimperᚋmeetmeupᚋgraphᚋmodelᚐEmployee(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateEmployee(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "_id":
+				return ec.fieldContext_Employee__id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Employee_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Employee_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_Employee_email(ctx, field)
+			case "address":
+				return ec.fieldContext_Employee_address(ctx, field)
+			case "position":
+				return ec.fieldContext_Employee_position(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Employee", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateEmployee_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -3974,6 +4091,61 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateEmployee(ctx context.Context, obj interface{}) (model.UpdateEmployee, error) {
+	var it model.UpdateEmployee
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "firstName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
+			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "lastName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
+			it.LastName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "address":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			it.Address, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "position":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("position"))
+			it.Position, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -4147,6 +4319,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_auth(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateEmployee":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateEmployee(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -4933,6 +5114,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUpdateEmployee2githubᚗcomᚋequimperᚋmeetmeupᚋgraphᚋmodelᚐUpdateEmployee(ctx context.Context, v interface{}) (model.UpdateEmployee, error) {
+	res, err := ec.unmarshalInputUpdateEmployee(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋequimperᚋmeetmeupᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {

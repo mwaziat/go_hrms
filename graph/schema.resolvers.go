@@ -32,6 +32,10 @@ func (r *mutationResolver) Auth(ctx context.Context) (*model.AuthOps, error) {
 	return &model.AuthOps{}, nil
 }
 
+func (r *mutationResolver) UpdateEmployee(ctx context.Context, id string, input model.UpdateEmployee) (*model.Employee, error) {
+	return db.UpdateEmployee(id, input)
+}
+
 func (r *queryResolver) User(ctx context.Context, email string) (*model.User, error) {
 	return db.FindByEmail(email), nil
 }

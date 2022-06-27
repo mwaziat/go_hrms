@@ -62,9 +62,18 @@ input NewEmployee {
   position: String!
 }
 
+input UpdateEmployee {
+  firstName: String!
+  lastName: String!
+  email: String!
+  address: String!
+  position: String!
+}
+
 type Mutation {
   createEmployee(input:NewEmployee!): Employee!
   createUser(input: NewUser!): User!
   auth: AuthOps! 
   # login(email: String!, password: String!): Token!
+  updateEmployee(_id: ID!, input: UpdateEmployee!): Employee!
 }
